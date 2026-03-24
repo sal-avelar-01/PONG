@@ -5,15 +5,104 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pong Game</title>
     <style>
-        /* Styles for the game */
-        body { display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background-color: black; }
+        body { text-align: center; background: black; color: white; }
         canvas { border: 1px solid white; }
+        #score { font-size: 24px; }
     </style>
 </head>
 <body>
-    <canvas id="pong" width="800" height="400"></canvas>
+    <h1>Pong Game</h1>
+    <canvas id="pongCanvas" width="800" height="400"></canvas>
+    <div id="score"></div>
     <script>
-        // JavaScript for Pong game goes here
+        const canvas = document.getElementById('pongCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Game settings
+        let paddleWidth = 10, paddleHeight = 100;
+        let playerPaddleY = (canvas.height - paddleHeight) / 2;
+        let computerPaddleY = (canvas.height - paddleHeight) / 2;
+        let ballSize = 10;
+        let ballX = canvas.width / 2, ballY = canvas.height / 2;
+        let ballSpeedX = 5, ballSpeedY = 2;
+        let playerScore = 0, computerScore = 0;
+
+        // Draw paddles and ball
+        function draw() {
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw player paddle
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, playerPaddleY, paddleWidth, paddleHeight);
+            
+            // Draw computer paddle
+            ctx.fillRect(canvas.width - paddleWidth, computerPaddleY, paddleWidth, paddleHeight);
+            
+            // Draw ball
+            ctx.beginPath();
+            ctx.arc(ballX, ballY, ballSize, 0, Math.PI * 2, false);
+            ctx.fill();
+
+            // Display score
+            document.getElementById('score').innerText = `Player: ${playerScore} - Computer: ${computerScore}`;
+        }
+
+        // Update game state
+        function update() {
+            ballX += ballSpeedX;
+            ballY += ballSpeedY;
+
+            // Ball collision with top and bottom
+            if (ballY + ballSize > canvas.height || ballY - ballSize < 0) {
+                ballSpeedY = -ballSpeedY;
+            }
+
+            // Ball collision with paddles
+            if (ballX < paddleWidth && ballY > playerPaddleY && ballY < playerPaddleY + paddleHeight) {
+                ballSpeedX = -ballSpeedX;
+            } else if (ballX > canvas.width - paddleWidth && ballY > computerPaddleY && ballY < computerPaddleY + paddleHeight) {
+                ballSpeedX = -ballSpeedX;
+            }
+
+            // Score update
+            if (ballX + ballSize < 0) {
+                computerScore++;
+                resetBall();
+            } else if (ballX - ballSize > canvas.width) {
+                playerScore++;
+                resetBall();
+            }
+
+            // AI for computer paddle
+            computerPaddleY += (ballY - (computerPaddleY + paddleHeight / 2)) * 0.1;
+        }
+
+        // Reset the ball
+        function resetBall() {
+            ballX = canvas.width / 2;
+            ballY = canvas.height / 2;
+            ballSpeedX = -ballSpeedX;
+        }
+
+        // Game loop
+        function gameLoop() {
+            draw();
+            update();
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Player controls
+        document.addEventListener('mousemove', (event) => {
+            const rect = canvas.getBoundingClientRect();
+            const mouseY = event.clientY - rect.top;
+            playerPaddleY = mouseY - paddleHeight / 2;
+            if (playerPaddleY < 0) playerPaddleY = 0;
+            if (playerPaddleY + paddleHeight > canvas.height) playerPaddleY = canvas.height - paddleHeight;
+        });
+
+        // Start the game
+        gameLoop();
     </script>
 </body>
 </html>
